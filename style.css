@@ -12,3 +12,9 @@
 
 @media(hover:hover) and (prefers-reduced-motion:no-preference){.services-art img{transition:transform .9s cubic-bezier(.22,1,.36,1)}.services-art:hover img{transform:rotate(-12deg) scale(1.06)}.portraits .person{transition:transform .7s cubic-bezier(.22,1,.36,1)}.portraits:hover .maulana{transform:translate(-4px,-6px) rotate(-3deg)}.portraits:hover .malik{transform:translate(4px,-6px) rotate(3deg)}.service-card:hover .service-icon{transform:rotate(-10deg)}.service-icon{transition:transform .5s cubic-bezier(.22,1,.36,1)}}
 @media(min-width:701px) and (max-width:900px){.portraits{scale:.7}.about-copy{width:60%}}
+
+.hero,.middle{background:#fff}
+@media(max-width:700px){.contact-banner{position:static}.contact-banner>div{flex:initial;width:100%}.contact-banner{display:block}.contact-banner>div>p{padding-right:132px;max-width:none}.contact-banner .pill{float:right;margin-top:-43px}.contact-banner h3{font-size:18px;white-space:nowrap;letter-spacing:-.7px}}
+
+@media(min-width:701px){.project-column{gap:56px}.project-card p{min-height:108px}.project-column:first-child .project-card:first-child p{min-height:72px}.projects{padding-bottom:118px}}
+@media(max-width:700px){.project-column,.project-grid{gap:40px}.project-card p{min-height:108px}}

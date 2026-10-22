@@ -1,0 +1,212 @@
+{
+  "version": 2,
+  "site": {
+    "name": "8bit lab",
+    "email": "cesam19@gmail.com",
+    "instagram": "https://www.instagram.com/oprimus.prime/",
+    "linkedin": "https://www.linkedin.com/in/ekkyfjr/",
+    "availability": "Open minds. Open for projects."
+  },
+  "creators": [
+    {
+      "id": "creator-1",
+      "name": "",
+      "role": "",
+      "image": "creator-1.webp",
+      "url": "",
+      "visible": true
+    },
+    {
+      "id": "creator-2",
+      "name": "",
+      "role": "",
+      "image": "creator-2.webp",
+      "url": "",
+      "visible": true
+    },
+    {
+      "id": "creator-3",
+      "name": "",
+      "role": "",
+      "image": "creator-3.webp",
+      "url": "",
+      "visible": true
+    },
+    {
+      "id": "creator-4",
+      "name": "",
+      "role": "",
+      "image": "creator-4.webp",
+      "url": "",
+      "visible": true
+    }
+  ],
+  "services": [
+    {
+      "id": "brand",
+      "symbol": "\u2197",
+      "title": "Apps people love.",
+      "description": "UI/UX design for mobile apps, from user flows and wireframes to polished interfaces",
+      "deliverables": [
+        "User flows & journeys",
+        "Wireframes",
+        "Mobile interface design",
+        "Interactive prototypes"
+      ]
+    },
+    {
+      "id": "product",
+      "symbol": "\u2726",
+      "title": "Websites that click.",
+      "description": "Landing pages and responsive websites designed to look great and work even better.",
+      "deliverables": [
+        "Website strategy",
+        "Responsive web design",
+        "Interaction & motion direction",
+        "Development handoff"
+      ]
+    },
+    {
+      "id": "website",
+      "symbol": "\u2194",
+      "title": "Design that scales.",
+      "description": "Consistent, reusable design systems that keep digital products organized and easy to grow.",
+      "deliverables": [
+        "Design audit & foundations",
+        "Reusable components",
+        "Design tokens",
+        "Documentation & handoff"
+      ]
+    },
+    {
+      "id": "prototype",
+      "symbol": "\u219d",
+      "title": "Ideas in motion.",
+      "description": "Interactive prototypes that bring ideas to life, test experiences, and show how things work.",
+      "deliverables": [
+        "Rapid concept exploration",
+        "Clickable prototypes",
+        "Motion studies",
+        "Usability testing & iteration"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "game-picker",
+      "title": "Game Picker Squad Voting",
+      "subtitle": "Fresh thinking for everyday shopping. / Brand & e-commerce",
+      "image": "project-game.png",
+      "category": "Digital product",
+      "concept": false,
+      "summary": "A shared space for a squad to explore games and decide what to play next.",
+      "challenge": "Make a group decision feel as enjoyable as the game itself.",
+      "approach": "A visual, game-first interface brings the choices forward and keeps squad voting close at hand.",
+      "deliverables": [
+        "Interface design",
+        "Mobile experience",
+        "Voting interaction"
+      ]
+    },
+    {
+      "id": "integra",
+      "title": "INTEGRA.INC",
+      "subtitle": "An integrated platform for learning and collaboration.",
+      "image": "project-integra.png",
+      "category": "Digital platform",
+      "concept": false,
+      "summary": "An integrated platform for learning and collaboration.",
+      "challenge": "Bring learning and collaboration into one clear workspace.",
+      "approach": "A structured dashboard brings the information and tools into a shared visual system.",
+      "deliverables": [
+        "Dashboard interface",
+        "Information architecture",
+        "Responsive design"
+      ]
+    },
+    {
+      "id": "orbit",
+      "title": "Bongo Cat",
+      "subtitle": "More room for bright ideas. / Website & prototyping",
+      "image": "project-bongo.png",
+      "category": "Website & prototyping",
+      "concept": false,
+      "summary": "An expressive digital space for bright ideas and everyday momentum.",
+      "challenge": "Bring useful information into a clear, approachable mobile experience.",
+      "approach": "A compact visual hierarchy balances practical controls with a little personality.",
+      "deliverables": [
+        "Experience exploration",
+        "Interface design",
+        "Interactive prototyping"
+      ]
+    },
+    {
+      "id": "field-notes",
+      "title": "Field Notes",
+      "subtitle": "A little room to grow. / Brand concept",
+      "image": "",
+      "art": "field",
+      "category": "Brand exploration",
+      "concept": true,
+      "summary": "An internal studio concept exploring the meeting point of clear thinking and playful design.",
+      "challenge": "Explore a distinct visual direction while keeping the experience useful and approachable.",
+      "approach": "Bold typography, an edited palette, and simple interactions form a flexible starting point for a future project.",
+      "deliverables": [
+        "Art direction study",
+        "Visual exploration",
+        "Interaction concept"
+      ]
+    },
+    {
+      "id": "form-and-function",
+      "title": "Form & Function",
+      "subtitle": "Useful, with a playful streak. / Product concept",
+      "image": "",
+      "art": "form",
+      "category": "Digital product",
+      "concept": true,
+      "summary": "An internal studio concept exploring the meeting point of clear thinking and playful design.",
+      "challenge": "Explore a distinct visual direction while keeping the experience useful and approachable.",
+      "approach": "Bold typography, an edited palette, and simple interactions form a flexible starting point for a future project.",
+      "deliverables": [
+        "Art direction study",
+        "Visual exploration",
+        "Interaction concept"
+      ]
+    },
+    {
+      "id": "good-company",
+      "title": "Good Company",
+      "subtitle": "A warmer corner of the internet. / Website concept",
+      "image": "",
+      "art": "company",
+      "category": "Website exploration",
+      "concept": true,
+      "summary": "An internal studio concept exploring the meeting point of clear thinking and playful design.",
+      "challenge": "Explore a distinct visual direction while keeping the experience useful and approachable.",
+      "approach": "Bold typography, an edited palette, and simple interactions form a flexible starting point for a future project.",
+      "deliverables": [
+        "Art direction study",
+        "Visual exploration",
+        "Interaction concept"
+      ]
+    },
+    {
+      "id": "next-experiment",
+      "title": "The next experiment",
+      "subtitle": "A space for what comes next. / Studio concept",
+      "image": "",
+      "art": "experiment",
+      "category": "Studio exploration",
+      "concept": true,
+      "summary": "An internal studio concept exploring the meeting point of clear thinking and playful design.",
+      "challenge": "Explore a distinct visual direction while keeping the experience useful and approachable.",
+      "approach": "Bold typography, an edited palette, and simple interactions form a flexible starting point for a future project.",
+      "deliverables": [
+        "Art direction study",
+        "Visual exploration",
+        "Interaction concept"
+      ]
+    }
+  ]
+}

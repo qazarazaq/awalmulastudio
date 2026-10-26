@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 // Property metadata is only used in Figma Design, so this is a no-op.
 function defineProperties() {}
@@ -31,7 +32,51 @@ struct VsOut {
 
 // There are no sprite switches, opacity fades or image crossfades.
 
+// Short stance sweeps backward at floor height; the longer recovery folds up.
+// Duty < 0.5 gives the alternating bipeds a genuine suspended phase.
+fn labRunStep(phase: f32, duty: f32) -> vec2f {
+  let cycle = fract(phase);
+  if (cycle < duty) { return vec2f(1.0 - 2.0 * cycle / duty, 0.0); }
+  let recovery = (cycle - duty) / (1.0 - duty);
+  let sweep = recovery * recovery * (3.0 - 2.0 * recovery);
+  return vec2f(-1.0 + 2.0 * sweep, pow(max(0.0, sin(recovery * 3.14159265)), 0.85));
+}
+
+fn labPitch(animal: i32, gait: f32) -> f32 {
+  if (animal == 0) { return 0.200 + 0.035 * sin(gait * 2.0 - 0.5); }
+  if (animal == 1) { return 0.170 + 0.035 * sin(gait * 2.0 - 0.7); }
+  if (animal == 2) { return 0.045 + 0.075 * sin(gait - 0.6); }
+  return 0.0;
+}
+
+fn labBodyMotion(animal: i32, position: vec2f, gait: f32) -> vec2f {
+  let angle = labPitch(animal, gait);
+  // Low, forward-driving sprint, rather than a large leisurely vertical bounce.
+  var bob = -0.008 + 0.011 * cos(gait * 2.0 - 1.63);
+  if (animal == 2) { bob = -0.008 - 0.014 * cos(gait * 2.0 - 5.0); }
+  let pivot = vec2f(-0.040, 0.036);
+  let q = position - pivot;
+  return pivot + vec2f(cos(angle) * q.x - sin(angle) * q.y,
+    sin(angle) * q.x + cos(angle) * q.y) + vec2f(0.0, bob);
+}
+
 fn labJoint(animal: i32, j: i32, gait: f32) -> vec3f {
+  let joint = labJointBase(animal, j, gait);
+  if (animal == 3) { return joint; }
+  var weight = 1.0;
+  if (j >= 8 && j < 20) {
+    let part = (j - 8) % 3;
+    let limb = (j - 8) / 3;
+    if (animal != 1 || limb < 2) {
+      weight = select(select(0.0, 0.30, part == 1), 1.0, part == 0);
+    }
+  }
+  // Feet never inherit body motion; translate the complete cat after posing.
+  let offset = vec2f(0.0, select(0.0, 0.105, animal == 2));
+  return vec3f(mix(joint.xy, labBodyMotion(animal, joint.xy, gait), weight) + offset, joint.z);
+}
+
+fn labJointBase(animal: i32, j: i32, gait: f32) -> vec3f {
 
   let s = sin(gait);
 
@@ -39,7 +84,7 @@ fn labJoint(animal: i32, j: i32, gait: f32) -> vec3f {
 
   if (animal == 0) {
 
-    // Flamingo: folded S neck, hooked bill, and two slender stepping legs.
+    // Flamingo run: extended push-off and high folded-hock recovery.
 
     if (j == 0) { return vec3f(0.005, -0.015, 0.030); }
 
@@ -69,17 +114,15 @@ fn labJoint(animal: i32, j: i32, gait: f32) -> vec3f {
 
       }
 
-      let wave = select(s, -s, limb == 1);
-
-      let lift = max(0.0, select(c, -c, limb == 1));
+      let stride = labRunStep(gait / 6.2831853 + f32(limb) * 0.5, 0.26);
 
       let hip = -0.044 + f32(limb) * 0.026;
 
       if (part == 0) { return vec3f(hip, 0.036, 0.010); }
 
-      if (part == 1) { return vec3f(hip - wave * 0.045, 0.163 - lift * 0.035, 0.008); }
+      if (part == 1) { return vec3f(hip - 0.025 - stride.x * 0.030 - stride.y * 0.073, 0.166 - stride.y * 0.085, 0.008); }
 
-      return vec3f(hip + wave * 0.080 + 0.012, 0.294 - lift * 0.060, 0.009);
+      return vec3f(hip + stride.x * 0.128 + 0.012, 0.294 - stride.y * 0.153, 0.009);
 
     }
 
@@ -89,29 +132,31 @@ fn labJoint(animal: i32, j: i32, gait: f32) -> vec3f {
 
     if (j == 22) { return vec3f(-0.183, -0.047, 0.011); }
 
-    return vec3f(-0.204, -0.058, 0.003);
+    return vec3f(-0.204, -0.058 + sin(gait - 0.7) * 0.013, 0.003);
 
   }
 
   if (animal == 1) {
 
-    // Human: upright torso, round head, two counter-swinging arms and legs.
+    // T-rex: massive forward skull, tiny arms and weight-bearing hind legs.
 
-    if (j == 0) { return vec3f(0.0, -0.103, 0.033); }
+    // Bob and pitch are applied coherently by labJoint, not to planted toes.
+    let bob = 0.0;
+    if (j == 0) { return vec3f(0.033, -0.058 + bob, 0.060); }
 
-    if (j == 1) { return vec3f(0.0, -0.145, 0.027); }
+    if (j == 1) { return vec3f(0.072, -0.097 + bob, 0.047); }
 
-    if (j == 2) { return vec3f(0.0, -0.178, 0.022); }
+    if (j == 2) { return vec3f(0.101, -0.147 + bob, 0.039); }
 
-    if (j == 3) { return vec3f(0.003, -0.207, 0.026); }
+    if (j == 3) { return vec3f(0.137, -0.174 + bob, 0.047); }
 
-    if (j == 4) { return vec3f(0.005, -0.244, 0.037); }
+    if (j == 4) { return vec3f(0.181, -0.176 + bob, 0.048); }
 
-    if (j == 5) { return vec3f(0.038, -0.246, 0.010); }
+    if (j == 5) { return vec3f(0.224, -0.175 + bob, 0.042); }
 
-    if (j == 6) { return vec3f(0.059, -0.234, 0.007); }
+    if (j == 6) { return vec3f(0.263, -0.166 + bob, 0.034); }
 
-    if (j == 7) { return vec3f(0.044, -0.225, 0.007); }
+    if (j == 7) { return vec3f(0.247, -0.139 + bob, 0.022); }
 
     if (j >= 8 && j < 20) {
 
@@ -121,29 +166,32 @@ fn labJoint(animal: i32, j: i32, gait: f32) -> vec3f {
 
       let wave = select(s, -s, limb % 2 == 1);
 
-      let lift = max(0.0, select(c, -c, limb % 2 == 1));
+      let stride = labRunStep(gait / 6.2831853 + f32(limb % 2) * 0.5, 0.28);
 
       if (limb < 2) {
 
-        if (part == 0) { return vec3f(-0.012 + f32(limb) * 0.024, 0.080, 0.030); }
+        let hip = -0.054 + f32(limb) * 0.025;
+        if (part == 0) { return vec3f(hip, 0.046 + bob, 0.043); }
 
-        if (part == 1) { return vec3f(wave * 0.047 - 0.012, 0.184 - lift * 0.021, 0.023); }
+        if (part == 1) { return vec3f(hip + 0.062 + stride.x * 0.057, 0.156 - stride.y * 0.074, 0.026); }
 
-        return vec3f(wave * 0.103 + 0.014, 0.296 - lift * 0.051, 0.023);
+        return vec3f(hip + stride.x * 0.140 + 0.027 - stride.y * 0.045, 0.281 - stride.y * 0.143, 0.019);
 
       }
 
-      if (part == 0) { return vec3f(0.0, -0.113, 0.024); }
+      if (part == 0) { return vec3f(0.063, -0.040 + bob, 0.015); }
 
-      if (part == 1) { return vec3f(-wave * 0.065 - 0.008, -0.016, 0.019); }
+      if (part == 1) { return vec3f(0.091 - wave * 0.017, 0.006 + bob, 0.010); }
 
-      return vec3f(-wave * 0.112 + 0.018, 0.054 - abs(wave) * 0.032, 0.020);
+      return vec3f(0.126 - wave * 0.024, -0.005 + bob, 0.009);
 
     }
 
-    // The animal tail folds fully into the human pelvis.
-
-    return vec3f(-0.010, 0.046, 0.014);
+    // Long tapered counterweight, gently opposing the hind-leg stride.
+    if (j == 20) { return vec3f(-0.107, 0.008 + bob, 0.047); }
+    if (j == 21) { return vec3f(-0.181, -0.015 + bob - s * 0.006, 0.034); }
+    if (j == 22) { return vec3f(-0.253, -0.047 - sin(gait - 0.5) * 0.016, 0.020); }
+    return vec3f(-0.323, -0.084 - sin(gait - 0.9) * 0.026, 0.004);
 
   }
 
@@ -173,33 +221,32 @@ fn labJoint(animal: i32, j: i32, gait: f32) -> vec3f {
 
       let part = (j - 8) % 3;
 
-      let g = gait + select(0.0, 3.14159265, limb % 2 == 1) + select(0.0, 1.35, limb >= 2);
-
-      let swing = sin(g);
-
-      let lift = max(0.0, cos(g));
+      // Paired hind push, then paired fore landing: a gathered/extended gallop.
+      let phaseOffset = select(0.0, 0.48, limb >= 2) + f32(limb % 2) * 0.10;
+      let stride = labRunStep(gait / 6.2831853 + phaseOffset, 0.17);
 
       let hip = select(-0.112, 0.099, limb >= 2);
 
       if (part == 0) { return vec3f(hip, 0.054, 0.024); }
 
-      if (part == 1) { return vec3f(hip + swing * 0.044 - 0.015, 0.123 - lift * 0.026, 0.016); }
+      let foldDirection = select(1.0, -1.0, limb >= 2);
+      if (part == 1) { return vec3f(hip + stride.x * 0.062 + foldDirection * (0.014 + stride.y * 0.048), 0.121 - stride.y * 0.046, 0.016); }
 
-      return vec3f(hip + swing * 0.080 + 0.014, 0.181 - lift * 0.067, 0.017);
+      return vec3f(hip + stride.x * 0.132 + 0.014, 0.181 - stride.y * 0.112, 0.017);
 
     }
 
     if (j == 20) { return vec3f(-0.145, 0.016, 0.023); }
 
-    if (j == 21) { return vec3f(-0.211, -0.019 + s * 0.009, 0.019); }
+    if (j == 21) { return vec3f(-0.211, -0.019 + sin(gait - 0.4) * 0.014, 0.019); }
 
     if (j == 22) { return vec3f(-0.253 + c * 0.010, -0.080 + s * 0.016, 0.015); }
 
-    return vec3f(-0.247 + c * 0.016, -0.139 + s * 0.019, 0.011);
+    return vec3f(-0.247 + cos(gait - 0.8) * 0.020, -0.139 + sin(gait - 0.8) * 0.028, 0.011);
 
   }
 
-  // Fish: all walking limbs tuck into the body or become short fins.
+  // Shark: tapered wedge snout; walking limbs tuck into swept pectoral fins.
 
   if (j == 0) { return vec3f(0.087, 0.0, 0.049); }
 
@@ -209,13 +256,13 @@ fn labJoint(animal: i32, j: i32, gait: f32) -> vec3f {
 
   if (j == 3) { return vec3f(0.155, 0.0, 0.037); }
 
-  if (j == 4) { return vec3f(0.170, 0.0, 0.031); }
+  if (j == 4) { return vec3f(0.170, -0.001, 0.032); }
 
-  if (j == 5) { return vec3f(0.191, 0.006, 0.016); }
+  if (j == 5) { return vec3f(0.203, 0.003, 0.026); }
 
-  if (j == 6) { return vec3f(0.209, 0.006, 0.011); }
+  if (j == 6) { return vec3f(0.241, 0.010, 0.015); }
 
-  if (j == 7) { return vec3f(0.215, 0.005, 0.006); }
+  if (j == 7) { return vec3f(0.276, 0.014, 0.003); }
 
   if (j >= 8 && j < 20) {
 
@@ -223,35 +270,35 @@ fn labJoint(animal: i32, j: i32, gait: f32) -> vec3f {
 
     let part = (j - 8) % 3;
 
-    let root = vec2f(-0.045 + f32(limb) * 0.032, 0.020);
+    let root = vec2f(-0.025 + f32(limb) * 0.028, 0.020);
 
     if (part == 0) { return vec3f(root, 0.016); }
 
-    if (part == 1) { return vec3f(root + vec2f(-0.018, 0.023), 0.012); }
+    if (part == 1) { return vec3f(root + vec2f(-0.027, 0.031), 0.012); }
 
-    return vec3f(root + vec2f(-0.041 + s * 0.012, 0.044), 0.008);
+    return vec3f(root + vec2f(-0.063 + sin(gait - 0.65) * 0.018, 0.068), 0.004);
 
   }
 
   if (j == 20) { return vec3f(-0.131, 0.0, 0.032); }
 
-  if (j == 21) { return vec3f(-0.179, s * 0.012, 0.022); }
+  if (j == 21) { return vec3f(-0.179, sin(gait - 0.35) * 0.018, 0.022); }
 
-  if (j == 22) { return vec3f(-0.217 + c * 0.008, s * 0.025, 0.014); }
+  if (j == 22) { return vec3f(-0.217 + cos(gait - 0.7) * 0.010, sin(gait - 0.7) * 0.034, 0.014); }
 
-  return vec3f(-0.244 + c * 0.014, s * 0.038, 0.010);
+  return vec3f(-0.244 + cos(gait - 1.0) * 0.018, sin(gait - 1.0) * 0.050, 0.010);
 
 }
 
-fn labBody(animal: i32) -> vec4f {
+fn labBody(animal: i32, gait: f32) -> vec4f {
 
-  if (animal == 0) { return vec4f(-0.058, -0.010, 0.112, 0.073); }
+  if (animal == 0) { return vec4f(labBodyMotion(0, vec2f(-0.058, -0.010), gait), 0.112, 0.073); }
 
-  if (animal == 1) { return vec4f(0.0, -0.012, 0.051, 0.128); }
+  if (animal == 1) { return vec4f(labBodyMotion(1, vec2f(-0.025, -0.015), gait), 0.106, 0.092); }
 
-  if (animal == 2) { return vec4f(-0.015, 0.027, 0.151, 0.064); }
+  if (animal == 2) { return vec4f(labBodyMotion(2, vec2f(-0.015, 0.027), gait) + vec2f(0.0, 0.105), 0.151 + 0.018 * cos(gait - 0.5), 0.064 - 0.008 * cos(gait - 0.5)); }
 
-  return vec4f(0.003, 0.0, 0.177, 0.091);
+  return vec4f(-0.002, 0.0, 0.183, 0.068);
 
 }
 
@@ -259,11 +306,11 @@ fn labHeadAxes(animal: i32) -> vec2f {
 
   if (animal == 0) { return vec2f(0.043, 0.034); }
 
-  if (animal == 1) { return vec2f(0.046, 0.057); }
+  if (animal == 1) { return vec2f(0.079, 0.053); }
 
   if (animal == 2) { return vec2f(0.051, 0.046); }
 
-  return vec2f(0.041, 0.051);
+  return vec2f(0.057, 0.043);
 
 }
 
@@ -325,6 +372,21 @@ fn labTriangle(p: vec2f, a: vec2f, b: vec2f, c: vec2f) -> f32 {
 }
 
 fn labAppendage(animal: i32, appendage: i32, vertex: i32, gait: f32) -> vec2f {
+  let position = labAppendageBase(animal, appendage, vertex, gait);
+  if (animal == 2) { return labBodyMotion(2, position, gait) + vec2f(0.0, 0.105); }
+  return position + vec2f(0.0, select(0.0, 0.105, animal == 2));
+}
+
+fn labAppendageBase(animal: i32, appendage: i32, vertex: i32, gait: f32) -> vec2f {
+
+  if (animal == 1) {
+    // Small forward-pointing toes travel with each hind foot, not the torso.
+    let foot = labJoint(1, 10 + (appendage % 2) * 3, gait).xy;
+    let spread = select(-0.006, 0.008, appendage >= 2);
+    if (vertex == 0) { return foot + vec2f(-0.012, spread - 0.009); }
+    if (vertex == 1) { return foot + vec2f(0.047, spread + 0.009); }
+    return foot + vec2f(-0.009, spread + 0.013);
+  }
 
   if (animal == 2) {
 
@@ -360,25 +422,25 @@ fn labAppendage(animal: i32, appendage: i32, vertex: i32, gait: f32) -> vec2f {
 
     if (appendage == 0) {
 
-      if (vertex == 0) { return vec2f(-0.091, -0.056); }
+      if (vertex == 0) { return vec2f(-0.102, -0.042); }
 
-      if (vertex == 1) { return vec2f(-0.028 + sway * 0.012, -0.147); }
+      if (vertex == 1) { return vec2f(-0.031 + sin(gait - 0.45) * 0.012, -0.172); }
 
-      return vec2f(0.061, -0.065);
+      return vec2f(0.054, -0.052);
 
     }
 
     if (appendage == 1) {
 
-      if (vertex == 0) { return vec2f(-0.039, 0.063); }
+      if (vertex == 0) { return vec2f(-0.012, 0.036); }
 
-      if (vertex == 1) { return vec2f(-0.060 + sway * 0.015, 0.133); }
+      if (vertex == 1) { return vec2f(-0.113 + sin(gait - 0.8) * 0.025, 0.144 + sway * 0.008); }
 
-      return vec2f(0.073, 0.062);
+      return vec2f(0.087, 0.038);
 
     }
 
-    // Broad forked tail shares its base and phase with the tail skeleton.
+    // Heterocercal shark tail: tall swept upper lobe and shorter lower lobe.
 
     let root = labJoint(3, 22, gait).xy;
 
@@ -386,15 +448,15 @@ fn labAppendage(animal: i32, appendage: i32, vertex: i32, gait: f32) -> vec2f {
 
     if (vertex == 0) { return root + vec2f(0.009, 0.0); }
 
-    if (vertex == 1) { return tip + vec2f(-0.065, select(-0.087, 0.087, appendage == 3)); }
+    if (vertex == 1) { return tip + vec2f(select(-0.058, -0.041, appendage == 3), select(-0.137, 0.092, appendage == 3)); }
 
-    return tip + vec2f(-0.026, 0.0);
+    return tip + vec2f(-0.013, select(-0.033, 0.027, appendage == 3));
 
   }
 
   // Ears / fins fold into existing material in the other species.
 
-  let body = labBody(animal);
+  let body = labBody(animal, gait);
 
   return body.xy + vec2f((f32(vertex) - 1.0) * 0.008, select(-0.006, 0.006, vertex == 1));
 
@@ -422,7 +484,7 @@ fn labAppendage(animal: i32, appendage: i32, vertex: i32, gait: f32) -> vec2f {
   let pixelSize = u.pixelSize.x;
   let characterSize = u.characterSize.x;
   let morphDuration = u.morphDuration.x;
-  // Time is wrapped once for both poses and gaits. Four complete gait cycles
+  // Time is wrapped once for both poses and gaits. Twelve complete gait cycles
   // per stage makes the entire motion and its velocity periodic at the seam.
   let phase = fract(time / max(loopDuration, 0.1));
   let stageTime = phase * 4.0;
@@ -431,18 +493,33 @@ fn labAppendage(animal: i32, appendage: i32, vertex: i32, gait: f32) -> vec2f {
   let stagePhase = fract(stageTime);
   let rawMorph = clamp((stagePhase - (1.0 - morphDuration)) / morphDuration, 0.0, 1.0);
   let morph = rawMorph * rawMorph * rawMorph * (rawMorph * (rawMorph * 6.0 - 15.0) + 10.0);
-  let gait = phase * 100.5309649149;
+  // Twice the previous cadence, without shortening a species hold or morph.
+  let gait = phase * 301.5928947446;
   // Pixel samples use square cells, locked to the exact central anchor.
   // dims is the logical point-space extent, independent of raster scale.
   let cell = max(1.0, round(pixelSize));
   let canvasPoint = (uv - vec2f(0.5)) * dims;
   let snapped = (floor(canvasPoint / cell) + vec2f(0.5)) * cell;
-  let p = snapped / (min(dims.x, dims.y) * characterSize * 0.01);
-  let torso = mix(labBody(animal), labBody(nextAnimal), morph);
-  var distance = labEllipse(p, torso.xy, torso.zw);
+  let anchoredPoint = snapped / (min(dims.x, dims.y) * characterSize * 0.01);
+  // Inverse continuous bend carries the entire shark, fins included, through
+  // one head-to-tail propulsion wave. Its envelope keeps the snout steady;
+  // the growing rear wave drives the tail, with no whole-character drift.
+  let sharkWeight = mix(select(0.0, 1.0, animal == 3), select(0.0, 1.0, nextAnimal == 3), morph);
+  let rear = clamp((0.24 - anchoredPoint.x) / 0.56, 0.0, 1.0);
+  let wave = (0.003 + 0.028 * rear * rear) * sin(gait + anchoredPoint.x * 9.0);
+  let p = anchoredPoint - vec2f(0.0, sharkWeight * wave);
+  let torso = mix(labBody(animal, gait), labBody(nextAnimal, gait), morph);
+  let bodyAngle = mix(labPitch(animal, gait), labPitch(nextAnimal, gait), morph);
+  let bodyPoint = p - torso.xy;
+  let unpitched = vec2f(cos(bodyAngle) * bodyPoint.x + sin(bodyAngle) * bodyPoint.y,
+    -sin(bodyAngle) * bodyPoint.x + cos(bodyAngle) * bodyPoint.y);
+  var distance = labEllipse(unpitched, vec2f(0.0), torso.zw);
   let head = mix(labJoint(animal, 4, gait), labJoint(nextAnimal, 4, gait), morph);
   let headAxes = mix(labHeadAxes(animal), labHeadAxes(nextAnimal), morph);
-  distance = min(distance, labEllipse(p, head.xy, headAxes));
+  let headPoint = p - head.xy;
+  let headLocal = vec2f(cos(bodyAngle) * headPoint.x + sin(bodyAngle) * headPoint.y,
+    -sin(bodyAngle) * headPoint.x + cos(bodyAngle) * headPoint.y);
+  distance = min(distance, labEllipse(headLocal, vec2f(0.0), headAxes));
   for (var k = 0; k < 4; k = k + 1) {
     let a = mix(labJoint(animal, k, gait), labJoint(nextAnimal, k, gait), morph);
     let b = mix(labJoint(animal, k + 1, gait), labJoint(nextAnimal, k + 1, gait), morph);
@@ -472,9 +549,10 @@ fn labAppendage(animal: i32, appendage: i32, vertex: i32, gait: f32) -> vec2f {
     let c = mix(labAppendage(animal, k, 2, gait), labAppendage(nextAnimal, k, 2, gait), morph);
     distance = min(distance, labTriangle(p, a, b, c));
   }
-  let background = vec3f(16.0, 16.0, 16.0) / 255.0;
   let lime = vec3f(200.0, 255.0, 61.0) / 255.0;
-  return vec4f(select(background, lime, distance <= 0.0), 1.0);
+  // Canvas uses premultiplied alpha; fully transparent pixels must have zero RGB.
+  let alpha = select(0.0, 1.0, distance <= 0.0);
+  return vec4f(lime * alpha, alpha);
 }
 `;
     frame.state.module = device.createShaderModule({ code: wgsl });
@@ -597,9 +675,10 @@ export function render(device, frame) {
     var width = Math.max(1, finiteNumber(output.physicalWidth, finiteNumber(output.width, 1)) / renderScale);
     var height = Math.max(1, finiteNumber(output.physicalHeight, finiteNumber(output.height, 1)) / renderScale);
     var duration = Math.max(6, Math.min(28, numberParam("loopDuration", 14)));
+    var speed = Math.max(0, Math.min(4, numberParam("speed", 1)));
     // frame.time is milliseconds. Wrap in JavaScript before f32 packing to
     // preserve smooth subframe precision even during long-running previews.
-    var time = ((finiteNumber(frame.time, 0) * 0.001) % duration + duration) % duration;
+    var time = ((finiteNumber(frame.time, 0) * 0.001 * speed) % duration + duration) % duration;
     var inputWidth = width;
     var inputHeight = height;
     device.queue.writeBuffer(frame.state.uniformBuf, 0, new Float32Array([
@@ -657,6 +736,15 @@ export function render(device, frame) {
     device.queue.submit([encoder.finish()]);
 }
 defineProperties(Effect, {
+    "speed": {
+        type: "number",
+        label: "Speed",
+        defaultValue: 1,
+        control: "slider",
+        min: 0,
+        max: 4,
+        step: 0.05,
+    },
     "loopDuration": {
         type: "number",
         label: "Loop duration",

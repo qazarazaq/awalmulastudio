@@ -3,42 +3,46 @@
   "site": {
     "name": "8bit lab",
     "email": "cesam19@gmail.com",
-    "instagram": "https://www.instagram.com/oprimus.prime/",
+    "instagram": "https://www.instagram.com/oprimus_prime/",
     "linkedin": "https://www.linkedin.com/in/ekkyfjr/",
     "availability": "Open minds. Open for projects."
   },
   "creators": [
     {
       "id": "creator-1",
-      "name": "",
-      "role": "",
-      "image": "creator-1.webp",
-      "url": "",
-      "visible": true
+      "name": "Ekky F",
+      "role": "Senior Designers",
+      "image": "team-0.png",
+      "url": "https://www.linkedin.com/in/ekkyfjr/",
+      "visible": true,
+      "experience": "10+ Experiences"
     },
     {
       "id": "creator-2",
-      "name": "",
-      "role": "",
-      "image": "creator-2.webp",
+      "name": "Maulana C",
+      "role": "Senior Designers",
+      "image": "team-1.png",
       "url": "",
-      "visible": true
+      "visible": true,
+      "experience": "8+ Experiences"
     },
     {
       "id": "creator-3",
-      "name": "",
-      "role": "",
-      "image": "creator-3.webp",
+      "name": "Primus W",
+      "role": "Senior Designers",
+      "image": "team-2.png",
       "url": "",
-      "visible": true
+      "visible": true,
+      "experience": "5+ Experiences"
     },
     {
       "id": "creator-4",
-      "name": "",
-      "role": "",
-      "image": "creator-4.webp",
+      "name": "Wildan R",
+      "role": "Senior Design + Developers",
+      "image": "team-3.png",
       "url": "",
-      "visible": true
+      "visible": true,
+      "experience": "7+ Experiences"
     }
   ],
   "services": [

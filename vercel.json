@@ -59,5 +59,51 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "cetzandco.vercel.app"
+        }
+      ],
+      "destination": "https://8bitlabbycetz.vercel.app/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "awalmulastudio-six.vercel.app"
+        }
+      ],
+      "destination": "https://8bitlabbycetz.vercel.app/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "awalmulastudio-qazarazaqs-projects.vercel.app"
+        }
+      ],
+      "destination": "https://8bitlabbycetz.vercel.app/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "awalmulastudio-git-main-qazarazaqs-projects.vercel.app"
+        }
+      ],
+      "destination": "https://8bitlabbycetz.vercel.app/:path*",
+      "permanent": true
+    }
   ]
 }

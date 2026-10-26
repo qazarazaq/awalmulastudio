@@ -13,7 +13,16 @@
   document.body.appendChild(panel);
   const body=panel.querySelector('.lab-overlay__content');
   const closeButton=panel.querySelector('.lab-overlay__close');
-  let opened='',previousFocus=null,closeTimer=null,originalOverflow='';
+  let opened='',previousFocus=null,closeTimer=null,originalOverflow='',currentAnimation=null,contentAnimation=null,requestId=0;
+  const ease='cubic-bezier(0.22, 1, 0.36, 1)';
+  const animatePanel=(enter)=>{
+    currentAnimation?.cancel();contentAnimation?.cancel();
+    if(reduce.matches)return;
+    const mask=enter?['inset(0 0 100% 0)','inset(0 0 0 0)']:['inset(0 0 0 0)','inset(100% 0 0 0)'];
+    currentAnimation=panel.animate([{clipPath:mask[0]},{clipPath:mask[1]}],{duration:enter?1050:780,easing:enter?ease:'cubic-bezier(0.76, 0, 0.24, 1)',fill:'both'});
+    if(enter){contentAnimation=body.animate([{opacity:0,transform:'translate3d(0,72px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:950,delay:180,easing:ease,fill:'both'});}
+    return currentAnimation;
+  };
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const safeUrl=s=>{try {const u=new URL(s);return u.protocol==='https:'?u.href:'';}catch{return '';}};
   const humanPage=async()=>{
@@ -25,21 +34,39 @@
   const sparkle=()=>{const pixels=[3,4,10,11,15,16,17,18,19,22,23,24,25,26,27,29,30,31,32,33,36,37,38,39,45,46];return '<div class="lab-overlay__spark-art" aria-hidden="true">'+Array.from({length:49},(_,i)=>pixels.includes(i)?'<i style="grid-column:'+(i%7+1)+';grid-row:'+(Math.floor(i/7)+1)+'"></i>':'').join('')+'</div>';};
   const contactPage=()=>'<div class="lab-overlay__inner lab-overlay__contact"><div><div class="lab-overlay__eyebrow">CONTACT / LET’S MAKE SOMETHING</div><h1 class="lab-overlay__heading">Big ideas.<br>Good energy.<br><em>Let’s talk.</em></h1><p class="lab-overlay__lede">Have a spark of an idea? We’ll bring the curious minds, bold thinking, and a little pixel magic.</p><div class="lab-overlay__spark">'+sparkle()+'<div><strong>SMALL SPARK. BIG POSSIBILITIES.</strong><p>A rough idea or a ready-to-go brief. We’re curious either way.</p></div></div></div><form class="lab-overlay__form"><h2>What do you need?</h2><p class="lab-overlay__form-intro">Pick a little of this, a little of that. Select all that fit.</p><div class="lab-overlay__choices">'+['UI/UX','Branding & Visual Identity','Social Media & Digital Design','Marketing Collateral'].map((s,i)=>'<label class="lab-overlay__choice"><input type="checkbox" name="service" value="'+esc(s)+'" '+(i<2?'checked':'')+'><span>'+esc(s)+'</span></label>').join('')+'</div><hr class="lab-overlay__divider"><div class="lab-overlay__step">02 / YOU & YOUR IDEA</div><div class="lab-overlay__fields"><label class="lab-overlay__field">Your name *<input name="name" placeholder="What should we call you?" required autocomplete="name"></label><label class="lab-overlay__field">Email address *<input name="email" type="email" placeholder="you@company.com" required autocomplete="email"></label></div><label class="lab-overlay__field lab-overlay__field--wide">Tell us about your project *<textarea name="message" required placeholder="The idea, the challenge, the dream. Share your goals, timeline, or anything else we should know."></textarea></label><div class="lab-overlay__submit"><small>* REQUIRED FIELDS<br>No perfect brief needed. Just say hello.</small><button type="submit">Send your idea ↗</button></div></form></div>';
   const open=async kind=>{
+    const id=++requestId;
     clearTimeout(closeTimer);
     if(!opened){previousFocus=document.activeElement;originalOverflow=document.documentElement.style.overflow;}
-    opened=kind;panel.classList.remove('is-open','is-closing');panel.setAttribute('aria-hidden','false');
-    body.innerHTML=kind==='humans'?await humanPage():contactPage();
+    const wasOpen=Boolean(opened);
+    opened=kind;
+    panel.classList.remove('is-open','is-closing');
+    const markup=kind==='humans'?await humanPage():contactPage();
+    if(id!==requestId)return;
+    body.innerHTML=markup;
     panel.setAttribute('aria-label',kind==='humans'?'The Humans':'Contact Us');
-    panel.scrollTop=0;document.documentElement.style.overflow='hidden';
-    requestAnimationFrame(()=>{panel.classList.add('is-open');closeButton.focus({preventScroll:true});});
+    panel.setAttribute('aria-hidden','false');
+    panel.scrollTop=0;
+    document.documentElement.style.overflow='hidden';
+    // Establish the start position in a distinct frame before animating.
+    // WAAPI makes the transition deterministic even when a dialog is opened asynchronously.
+    panel.classList.add('is-open');
+    if(!wasOpen)animatePanel(true);
+    else {currentAnimation?.cancel();contentAnimation?.cancel();body.animate([{opacity:0,transform:'translateY(35px)'},{opacity:1,transform:'translateY(0)'}],{duration:650,easing:ease});}
+    closeButton.focus({preventScroll:true});
     document.querySelector('#navigation')?.classList.remove('open');
     document.querySelector('.menu-toggle')?.setAttribute('aria-expanded','false');
   };
   const close=()=>{
-    if(!opened)return;opened='';panel.classList.remove('is-open');panel.classList.add('is-closing');
+    if(!opened)return;
+    ++requestId;
+    opened='';
+    panel.classList.remove('is-open');
+    panel.classList.add('is-closing');
     document.documentElement.style.overflow=originalOverflow;
     previousFocus?.focus?.({preventScroll:true});
-    closeTimer=setTimeout(()=>{panel.classList.remove('is-closing');panel.setAttribute('aria-hidden','true');body.innerHTML='';},reduce.matches?0:760);
+    const animation=animatePanel(false);
+    const finish=()=>{if(opened)return;panel.classList.remove('is-closing');panel.setAttribute('aria-hidden','true');body.innerHTML='';currentAnimation?.cancel();contentAnimation?.cancel();};
+    if(animation)animation.finished.then(finish).catch(()=>{});else finish();
   };
   closeButton.addEventListener('click',close);
   document.addEventListener('keydown',e=>{
@@ -52,7 +79,7 @@
     const url=new URL(anchor.href,location.href);
     if(url.origin!==location.origin)return;
     const href=anchor.getAttribute('href')||'';
-    const kind=(url.pathname==='/'&&url.hash==='#about')||href==='/humans'?'humans':(url.pathname==='/'&&url.hash==='#contact')?'contact':null;
+    const kind=(url.pathname==='/humans'||url.hash==='#about')?'humans':(url.pathname==='/contact'||url.hash==='#contact')?'contact':null;
     if(!kind)return;
     e.preventDefault();e.stopImmediatePropagation();open(kind);
   },true);

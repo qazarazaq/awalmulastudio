@@ -30,3 +30,10 @@
 @media(max-width:960px){.lab-overlay__people{grid-template-columns:repeat(2,minmax(0,1fr))}.lab-overlay__contact{grid-template-columns:1fr}.lab-overlay__spark{margin-top:30px}.lab-overlay__contact .lab-overlay__heading{max-width:600px}}
 @media(max-width:600px){.lab-overlay__inner{padding-top:40px}.lab-overlay__people{gap:20px 12px}.lab-overlay__portrait img{height:130px}.lab-overlay__person-info strong{font-size:17px}.lab-overlay__person-info p{font-size:11px}.lab-overlay__person-link{font-size:12px;gap:8px;padding:11px 13px}.lab-overlay__fields{grid-template-columns:1fr}.lab-overlay__spark{align-items:flex-start}.lab-overlay__spark-art{width:78px;height:78px}.lab-overlay__submit{align-items:flex-start;flex-direction:column}.lab-overlay__heading{font-size:clamp(47px,12vw,70px)}}
 @media(prefers-reduced-motion:reduce){.lab-overlay,.lab-overlay.is-open,.lab-overlay.is-closing{transition:none}.lab-overlay__content{transition:none;opacity:1;transform:none}.lab-overlay__portrait img{transition:none}}
+
+/* Motion state: native WAAPI controls the panel wipe so a deferred content fetch cannot skip it. */
+.lab-overlay.is-open{clip-path:inset(0 0 0 0);transition:none}
+.lab-overlay.is-closing{clip-path:inset(100% 0 0 0);transition:none}
+.lab-overlay__content{opacity:1;transform:none;transition:none}
+.lab-overlay.is-open .lab-overlay__content{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.lab-overlay.is-open{clip-path:inset(0 0 0 0)}.lab-overlay.is-closing{clip-path:inset(100% 0 0 0)}}

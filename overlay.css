@@ -1,5 +1,5 @@
 /* Full-screen editorial overlays — scoped to .lab-overlay, preserving the landing page */
-.lab-overlay{--overlay-ease:cubic-bezier(.22,1,.36,1);position:fixed;inset:0;z-index:110;background:#101010;color:#f7f7f2;overflow-y:auto;overscroll-behavior:contain;visibility:hidden;pointer-events:none;clip-path:inset(0 0 100% 0);transition:clip-path .9s var(--overlay-ease),visibility 0s linear .9s;-webkit-overflow-scrolling:touch}
+.lab-overlay{--overlay-ease:cubic-bezier(.22,1,.36,1);position:fixed;inset:0;z-index:110;background:#101010;color:#f7f7f2;overflow-y:auto;overscroll-behavior:contain;visibility:hidden;pointer-events:none;clip-path:inset(100% 0 0 0);transition:clip-path .9s var(--overlay-ease),visibility 0s linear .9s;-webkit-overflow-scrolling:touch}
 .lab-overlay.is-open{visibility:visible;pointer-events:auto;clip-path:inset(0 0 0 0);transition:clip-path .9s var(--overlay-ease)}
 .lab-overlay.is-closing{visibility:visible;pointer-events:none;clip-path:inset(100% 0 0 0);transition:clip-path .72s cubic-bezier(.76,0,.24,1),visibility 0s linear .72s}
 .lab-overlay__top{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:24px clamp(24px,4vw,56px);background:#101010ed;backdrop-filter:blur(15px);border-bottom:1px solid #ffffff12}
@@ -33,7 +33,28 @@
 
 /* Motion state: native WAAPI controls the panel wipe so a deferred content fetch cannot skip it. */
 .lab-overlay.is-open{clip-path:inset(0 0 0 0);transition:none}
-.lab-overlay.is-closing{clip-path:inset(100% 0 0 0);transition:none}
+.lab-overlay.is-closing{clip-path:inset(0 0 100% 0);transition:none}
 .lab-overlay__content{opacity:1;transform:none;transition:none}
 .lab-overlay.is-open .lab-overlay__content{opacity:1;transform:none}
-@media(prefers-reduced-motion:reduce){.lab-overlay.is-open{clip-path:inset(0 0 0 0)}.lab-overlay.is-closing{clip-path:inset(100% 0 0 0)}}
+@media(prefers-reduced-motion:reduce){.lab-overlay.is-open{clip-path:inset(0 0 0 0)}.lab-overlay.is-closing{clip-path:inset(0 0 100% 0)}}
+
+/* Figma 181:23842 — The Humans hero and individual team-card composition */
+.lab-overlay__humans{position:relative;isolation:isolate;padding-top:66px;min-height:calc(100svh - 100px)}
+.lab-overlay__humans:before{content:"";position:absolute;z-index:-1;right:-10%;top:-230px;width:800px;height:800px;pointer-events:none;background:radial-gradient(circle,rgba(200,255,61,.11) 0%,rgba(200,255,61,.04) 35%,transparent 70%);filter:blur(30px)}
+.lab-overlay__humans-copy{display:flex;flex-direction:column;gap:32px;align-items:flex-start}
+.lab-overlay__humans .lab-overlay__heading{max-width:850px;font-size:clamp(60px,6vw,84px);line-height:1.02;letter-spacing:-2px}
+.lab-overlay__humans .lab-overlay__lede{margin:0;max-width:618px;font-size:clamp(18px,1.6vw,23px);line-height:1.5}
+.lab-overlay__humans .lab-overlay__people{margin-top:32px;display:grid;grid-template-columns:repeat(4,minmax(0,314px));gap:24px;justify-content:space-between;align-items:start}
+.lab-overlay__humans .lab-overlay__person{display:flex;flex-direction:column;align-items:flex-start;gap:18px}
+.lab-overlay__humans .lab-overlay__portrait{width:100%;border-radius:24px;box-shadow:0 12px 24px rgba(0,0,0,.1)}
+.lab-overlay__humans .lab-overlay__photo{height:142px;background:#e2e2e2;overflow:hidden}
+.lab-overlay__humans .lab-overlay__portrait img{width:100%;height:100%;object-fit:cover;object-position:center 28%;border-radius:0}
+.lab-overlay__humans .lab-overlay__person-info{padding:16px;min-height:98px;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center}
+.lab-overlay__humans .lab-overlay__person-info strong{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:400;line-height:.95;letter-spacing:-.4px}
+.lab-overlay__humans .lab-overlay__person-info p{font-size:14px;line-height:1.2;margin:0;letter-spacing:.7px}
+.lab-overlay__socials{display:flex;gap:16px;align-items:center;min-height:32px}
+.lab-overlay__social{width:32px;height:32px;display:grid;place-items:center;font-family:monospace;font-size:17px;color:#f7f7f2;border:1px solid #f7f7f266;border-radius:50%;transition:color .2s,background .2s}
+.lab-overlay__social:hover{color:#101010;background:#c8ff3d}
+.lab-overlay__humans .lab-overlay__person-link{margin:0;padding:17px 28px;min-height:55px;font-size:16px;line-height:1.3;gap:32px}
+@media(max-width:1100px){.lab-overlay__humans .lab-overlay__people{grid-template-columns:repeat(2,minmax(0,314px));justify-content:start;gap:38px 24px}}
+@media(max-width:600px){.lab-overlay__humans{padding-top:35px}.lab-overlay__humans .lab-overlay__heading{font-size:clamp(46px,11vw,65px)}.lab-overlay__humans .lab-overlay__people{grid-template-columns:repeat(2,minmax(0,1fr));gap:26px 12px}.lab-overlay__humans .lab-overlay__photo{height:115px}.lab-overlay__humans .lab-overlay__person-info{min-height:105px;padding:12px 6px}.lab-overlay__humans .lab-overlay__person-info strong{font-size:16px}.lab-overlay__humans .lab-overlay__person-info p{font-size:10px}.lab-overlay__humans .lab-overlay__person-link{padding:10px 13px;font-size:12px;gap:10px}.lab-overlay__socials{gap:8px}}

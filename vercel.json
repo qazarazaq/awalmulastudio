@@ -3,14 +3,6 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/work/:slug",
-      "destination": "/index"
-    },
-    {
-      "source": "/services/:slug",
-      "destination": "/index"
-    },
-    {
       "source": "/humans",
       "destination": "/index"
     },
@@ -56,6 +48,33 @@
         {
           "key": "Cache-Control",
           "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/admin",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/admin.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/cms/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
         }
       ]
     }
@@ -105,5 +124,7 @@
       "destination": "https://8bitlabbycetz.vercel.app/:path*",
       "permanent": true
     }
-  ]
+  ],
+  "buildCommand": "node scripts/build-seo.mjs",
+  "outputDirectory": "dist"
 }

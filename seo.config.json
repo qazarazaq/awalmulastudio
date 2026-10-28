@@ -1,0 +1,11 @@
+{
+  "origin": "https://8bitlabbycetz.vercel.app",
+  "title": "8bit lab | UI/UX & Website Design Studio",
+  "description": "8bit lab is an independent UI/UX design studio creating mobile apps, responsive websites, design systems, and interactive prototypes. Let’s build your next idea.",
+  "services": {
+    "brand": "Mobile App UI/UX Design",
+    "product": "Website & Landing Page Design",
+    "website": "Design Systems",
+    "prototype": "Interactive Prototyping"
+  }
+}

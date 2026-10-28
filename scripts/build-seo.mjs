@@ -1,0 +1,55 @@
+
+import {readFileSync,writeFileSync,mkdirSync,cpSync,readdirSync,rmSync} from 'node:fs';
+import {join} from 'node:path';
+const cfg=JSON.parse(readFileSync('seo.config.json','utf8'));
+const data=JSON.parse(readFileSync('studio.json','utf8'));
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const valid=id=>/^[a-z0-9-]+$/.test(id);
+const asset=s=>/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.(webp|png|jpg|jpeg|svg)$/.test(s||'')?'/' + s:'';
+rmSync('dist',{recursive:true,force:true});mkdirSync('dist');
+for(const item of readdirSync('.'))if(!['dist','.git','.vercel','node_modules','scripts'].includes(item))cpSync(item,join('dist',item),{recursive:true});
+let base=readFileSync('index.html','utf8');
+const arrow='<span class="arrow" aria-hidden="true">↗</span>';
+const services=data.services.filter(s=>valid(s.id));
+const projects=data.projects.filter(p=>valid(p.id));
+const art=p=>asset(p.image)?'<img src="'+esc(asset(p.image))+'" alt="'+esc(p.title)+' project mockup" loading="lazy" width="650" height="380">':'<div class="concept-art art-experiment"><strong>'+esc(p.title)+'</strong></div><span class="concept-label">Studio concept</span>';
+const serviceCards=services.map((s,i)=>'<a class="service-card reveal" href="/services/'+esc(s.id)+'"><span class="symbol" aria-hidden="true"><img src="/'+['imgFrame1597883896.svg','imgFrame1597883924.svg','imgFrame1597883925.svg','imgFrame1597883926.svg'][i%4]+'" alt="" height="69"></span><h3>'+esc(s.title)+'</h3><p>'+esc(s.description)+'</p></a>').join('');
+const projectCards=projects.map(p=>'<a href="/work/'+esc(p.id)+'" class="project-card"><div class="project-visual">'+art(p)+'</div><div class="project-caption"><div><h3>'+esc(p.title)+'</h3><p>'+esc(p.subtitle)+'</p></div>'+arrow+'</div></a>').join('');
+base=base.replace('<div class="service-grid" id="service-grid"></div>','<div class="service-grid" id="service-grid">'+serviceCards+'</div>').replace('<div class="project-track" id="project-track"></div>','<div class="project-track" id="project-track">'+projectCards+'</div>');
+const pages={'/':{title:cfg.title,description:cfg.description,canonical:'/',index:true}};
+for(const s of services)pages['/services/'+s.id]={title:(cfg.services[s.id]||s.title)+' | 8bit lab',description:s.description,canonical:'/services/'+s.id,index:true};
+for(const p of projects)pages['/work/'+p.id]={title:p.title+' — '+p.category+' | 8bit lab',description:p.summary,canonical:'/work/'+p.id,index:!p.concept};
+for(const path of ['/humans','/contact'])pages[path]={...pages['/'],canonical:'/'};
+const organization={'@context':'https://schema.org','@graph':[{'@type':'Organization','@id':cfg.origin+'/#studio',name:'8bit lab',alternateName:'8bit lab by Cetz',url:cfg.origin+'/',email:data.site.email,description:cfg.description},{'@type':'WebSite','@id':cfg.origin+'/#website',name:'8bit lab',url:cfg.origin+'/',publisher:{'@id':cfg.origin+'/#studio'},inLanguage:'en'}]};
+const meta=(html,path)=>{
+ const p=pages[path],url=cfg.origin+p.canonical;
+ html=html.replace(/<title>[\s\S]*?<\/title>/,'<title>'+esc(p.title)+'</title>').replace(/<meta name="description"[^>]*>/,'<meta name="description" content="'+esc(p.description)+'">').replace(/<link rel="canonical"[^>]*>/,'<link rel="canonical" href="'+url+'">').replace(/<meta property="og:title"[^>]*>/,'');
+ const tags='<meta name="robots" content="'+(p.index?'index,follow,max-image-preview:large':'noindex,follow')+'"><meta property="og:type" content="website"><meta property="og:site_name" content="8bit lab"><meta property="og:title" content="'+esc(p.title)+'"><meta property="og:description" content="'+esc(p.description)+'"><meta property="og:url" content="'+url+'"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="'+esc(p.title)+'"><meta name="twitter:description" content="'+esc(p.description)+'">';
+ return html.replace('</head>',tags+(path==='/'?'<script type="application/ld+json">'+JSON.stringify(organization).replace(/</g,'\\u003c')+'</script>':'')+'</head>');
+};
+writeFileSync('dist/index.html',meta(base,'/'));
+const intro=(label,title,description)=>'<div class="shell detail-hero"><a class="back-link" href="/">← Back to the lab</a><p class="eyebrow detail-kicker">'+esc(label)+'</p><h1>'+esc(title)+'</h1><p class="lead">'+esc(description)+'</p></div>';
+const detail=(path,markup)=>{
+ mkdirSync(join('dist',path.split('/')[1]),{recursive:true});
+ const html=base.replace('<div id="home">','<div id="home" hidden>').replace('<div id="detail" hidden></div>','<div id="detail">'+markup+'</div>');
+ writeFileSync(join('dist',path+'.html'),meta(html,path));
+};
+for(const s of services)detail('/services/'+s.id,intro('DESIGN SERVICES',cfg.services[s.id]||s.title,s.description)+'<div class="shell"><div class="editorial"><h2>What we can create together.</h2><ul class="deliverables">'+s.deliverables.map(d=>'<li>'+esc(d)+'</li>').join('')+'</ul></div><p class="lead">Tell us about your goals, scope, and timeline. We’ll work out a practical next step together.</p><a class="button ink" href="/contact">Discuss your project ↗</a></div>');
+for(const p of projects)detail('/work/'+p.id,intro(p.concept?'STUDIO CONCEPT':'SELECTED WORK',p.title,p.summary)+'<div class="shell"><div class="detail-art">'+art(p)+'</div><div class="editorial"><h2>The idea.</h2><div><p>'+esc(p.challenge)+'</p><p>'+esc(p.approach)+'</p>'+(p.concept?'<p>Internal studio exploration, not a client commission.</p>':'')+'</div></div><div class="editorial"><h2>What’s in the mix.</h2><ul class="deliverables">'+p.deliverables.map(d=>'<li>'+esc(d)+'</li>').join('')+'</ul></div></div>');
+writeFileSync('dist/seo-meta.js','window.StudioSEO = '+function(path){
+ const pages=PAGES,origin=ORIGIN,p=pages[path]||{title:'Page not found | 8bit lab',description:'Explore 8bit lab’s design services and selected work.',canonical:path,index:false};
+ document.title=p.title;
+ const set=(selector,key,value)=>{const node=document.querySelector(selector);if(node)node.setAttribute(key,value);};
+ set('meta[name="description"]','content',p.description);set('link[rel="canonical"]','href',origin+p.canonical);
+ set('meta[name="robots"]','content',p.index?'index,follow,max-image-preview:large':'noindex,follow');
+ for(const [property,value] of Object.entries({'og:title':p.title,'og:description':p.description,'og:url':origin+p.canonical}))set('meta[property="'+property+'"]','content',value);
+ set('meta[name="twitter:title"]','content',p.title);set('meta[name="twitter:description"]','content',p.description);
+}.toString().replace('PAGES',JSON.stringify(pages)).replace('ORIGIN',JSON.stringify(cfg.origin))+';');
+const urls=Object.entries(pages).filter(([path,p])=>p.index&&path===p.canonical);
+writeFileSync('dist/sitemap.xml','<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+urls.map(([path])=>'<url><loc>'+cfg.origin+path+'</loc></url>').join('')+'</urlset>\n');
+writeFileSync('dist/robots.txt','User-agent: *\nAllow: /\n\nSitemap: '+cfg.origin+'/sitemap.xml\n');
+const vc=JSON.parse(readFileSync('vercel.json','utf8'));
+vc.rewrites=vc.rewrites.filter(r=>!['/work/:slug','/services/:slug'].includes(r.source));
+vc.headers.push(...['/admin','/admin.html','/cms/:path*'].map(source=>({source,headers:[{key:'X-Robots-Tag',value:'noindex, nofollow'}]})));
+writeFileSync('dist/vercel.json',JSON.stringify(vc,null,2));
+console.log('Generated SEO HTML for '+Object.keys(pages).length+' routes; sitemap contains '+urls.length+' URLs.');
